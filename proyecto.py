@@ -1,3 +1,5 @@
+from collections import deque
+
 
 
 def imprimir_tablero(estado):
@@ -52,18 +54,50 @@ def aplicar_movimiento(estado, movimiento):
 
     return nuevo_estado
 
+
+
+def bfs(estado_inicial, estado_objetivo):
+    queve = deque()
+    visitados = set()
+    padres = {}
+
+    queve.append(estado_inicial)
+    visitados.add(tuple(estado_inicial))
+    padres[tuple(estado_inicial)] = None
+
+    while queve:
+        estado_actual = queve.popleft()
+
+        if estado_actual == estado_objetivo:
+            camino = []
+            while estado_actual:
+                camino.append(estado_actual)
+                estado_actual = padres[tuple(estado_actual)]
+            return camino[::-1]
+        
+        for movimiento in posibles_movimientos(estado_actual):
+            vecino = aplicar_movimiento(estado_actual, movimiento)
+            tupla_vecino = tuple(vecino)
+
+            if tupla_vecino not in visitados:
+                visitados.add(tupla_vecino)
+                padres[tupla_vecino] = estado_actual
+                queve.append(vecino)
+
+    return None
+
 def main():
+    estado_objetivo = [1, 2, 3, 4, 5, 6, 7, 8, 0]
     estado_prueba1 = [1, 2, 3, 4, 0, 5, 6, 7, 8]
 
     imprimir_tablero(estado_prueba1)
     print("Posición del hueco en la lista:", posicion_hueco(estado_prueba1))
-    movs = posibles_movimientos(estado_prueba1)
-    print("Movimientos posibles:", movs)
-    print("Tableros resultantes de aplicar cada movimiento:")
-    for d in movs:
-        nuevo_estado = aplicar_movimiento(estado_prueba1, d)
-        imprimir_tablero(nuevo_estado)
+    camino = bfs(estado_prueba1, estado_objetivo)
+
+    print(f"Se encontraron {len(camino)-1} movimientos:")
+    for paso in camino:
         print("-----")
+        imprimir_tablero(paso)
 
 if __name__ == "__main__":
     main()
