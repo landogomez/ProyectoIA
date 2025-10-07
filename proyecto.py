@@ -16,9 +16,9 @@ def posicion_hueco(estado):
     return estado.index(0)
 
 def posibles_movimientos(estado):
-
-    hueco = posicion_hueco(estado)
-    fila, col = divmod(hueco, 3)
+    """ """
+    hueco = posicion_hueco(estado)  #Nos dice en que posición se encuentra el 0 o el hueco
+    fila, col = divmod(hueco, 3)    #Se sacan las filas y columnas, el indice, para más adelante ver hacia donde se puede mover
     movimientos = []
 
     if fila > 0:  # Arriba
@@ -34,11 +34,11 @@ def posibles_movimientos(estado):
 
 def aplicar_movimiento(estado, movimiento):
     """ Aplica el movimiento y devuelve el nuevo estado (lista). """
-    nuevo_estado = estado[:] 
-    hueco = posicion_hueco(estado)
-    nueva_posicion = hueco + movimiento
+    nuevo_estado = estado[:]                #Se crea una copia 
+    hueco = posicion_hueco(estado)          #Como lo hicimos anteriormente, se obtiene la posición del hueco
+    nueva_posicion = hueco + movimiento     #Calcula el índice de la ficha que se va a mover al hueco
     
-    # Realiza el intercambio (swap)
+    #Simplemente se hace un intercambio, esto hace que el hueco cambie de posicón
     nuevo_estado[hueco], nuevo_estado[nueva_posicion] = nuevo_estado[nueva_posicion], nuevo_estado[hueco]
 
     return nuevo_estado
@@ -86,12 +86,12 @@ def dfs(estado_inicial, estado_objetivo):
     Búsqueda no informada. Usa una pila (LIFO).
     No garantiza el camino más corto.
     """
-    pila = [estado_inicial]
-    visitados = {tuple(estado_inicial)}
+    pila = [estado_inicial] 
+    visitados = {tuple(estado_inicial)}         #Son los estados que ya han sido explorados
     padres = {tuple(estado_inicial): None}
 
     while pila:
-        estado_actual = pila.pop()
+        estado_actual = pila.pop()      #Aqui se extrae el último estado que se añadio a la pila
         
         if estado_actual == estado_objetivo:
             camino = []
