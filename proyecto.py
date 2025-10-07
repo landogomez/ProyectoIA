@@ -87,32 +87,54 @@ def dfs(estado_inicial, estado_objetivo):
     No garantiza el camino más corto.
     """
     pila = [estado_inicial] 
-    visitados = {tuple(estado_inicial)}         #Son los estados que ya han sido explorados
+    
+    # Usamos tuplas porque las listas (estados) no pueden ser claves en conjuntos.
+    visitados = {tuple(estado_inicial)} 
+    
+    # 'padres' almacena el rastro: qué estado llevó a cuál. Es clave para reconstruir el camino.
+    # El estado inicial no tiene padre (es None).
     padres = {tuple(estado_inicial): None}
 
     while pila:
-        estado_actual = pila.pop()      #Aqui se extrae el último estado que se añadio a la pila
+        # Extraemos el último estado añadido (LIFO). Esto define la "Profundidad"
+        estado_actual = pila.pop() 
         
-        if estado_actual == estado_objetivo:
+        if estado_actual == estado_objetivo:         #Vemos si está bien o si es la respuesta
+            # Si encontramos el objetivo, iniciamos el rastreo inverso (backtracking).
             camino = []
-            e = estado_actual
-            while e:
-                camino.append(e)
-                e = padres[tuple(e)]
+            e = estado_actual # Empezamos el rastreo desde el objetivo.
+            
+            while e: # El bucle se detiene cuando 'e' llega al estado inicial, cuyo padre es None.
+                camino.append(e) # Añadimos el estado al camino (en orden inverso).
+                # Buscamos el estado predecesor (padre) usando la tupla como clave.
+                e = padres[tuple(e)] 
+            
+            # Devolvemos el camino, invirtiéndolo para que vaya de Inicio a Objetivo.
             return camino[::-1]
         
-        # Nota: Los vecinos se añaden en orden inverso para que el primero
-        # generado sea el último en salir (profundidad).
+        # 4. Expansión del Nodo (Generación de Vecinos)
+        
+        # Iteramos sobre los movimientos posibles (Arriba, Abajo, Izq, Der).
+        # Usamos 'reversed' para que el primer vecino generado sea el último en salir de la pila,
+        # asegurando que se explore esa rama primero y así logrando la Profundidad.
         for movimiento in reversed(posibles_movimientos(estado_actual)): 
+            
+            # Aplicamos el movimiento para obtener el nuevo tablero.
             vecino = aplicar_movimiento(estado_actual, movimiento)
             tupla_vecino = tuple(vecino)
 
+            # 5. Filtrado y Registro del Nuevo Estado
             if tupla_vecino not in visitados:
+                # Si el vecino es nuevo, lo registramos para no visitarlo dos veces.
                 visitados.add(tupla_vecino)
+                
+                # Establecemos el estado actual como el "padre" del nuevo estado.
                 padres[tupla_vecino] = estado_actual
+                
+                # Añadimos el nuevo estado a la pila para explorarlo pronto.
                 pila.append(vecino)
 
-    return None
+    return None # Si la pila se vacía y no encontramos la meta, no hay solución.
 
 # Costo Uniforme (UCS)
 def costo_uniforme(estado_inicial, estado_objetivo):
@@ -120,21 +142,31 @@ def costo_uniforme(estado_inicial, estado_objetivo):
     Búsqueda de Costo Uniforme (UCS). Idéntico a A* con h(n)=0.
     Garantiza la solución de menor costo (mínimo número de movimientos).
     """
-    # Cola de prioridad
+    # 1. Inicialización de Estructuras Clave
+    
+    # 'cola_prioridad' usará un min-heap (heapq) para siempre sacar el estado con menor costo.
     cola_prioridad = []
-    # g_score: Almacena el costo real (g_n) para llegar a un estado
+    
+    # 'g_score' guarda el costo (g_n) actual más bajo conocido desde el inicio a cada estado.
     g_score = {tuple(estado_inicial): 0}
+    
+    # 'padres' sigue siendo esencial para reconstruir el camino.
     padres = {tuple(estado_inicial): None}
     
-    # El costo inicial es 0
+    # Añadimos el estado inicial a la cola con su prioridad (costo = 0).
+    # Formato: (costo, estado)
     heapq.heappush(cola_prioridad, (0, estado_inicial))
 
+    # 2. Ciclo Principal de Exploración
     while cola_prioridad:
+        # Extraemos el estado con la menor prioridad (el menor costo g_actual).
         g_actual, estado_actual = heapq.heappop(cola_prioridad)
         tupla_actual = tuple(estado_actual)
 
+        # 3. Verificación de la Solución
         if estado_actual == estado_objetivo:
-            # Reconstrucción del camino
+            # La reconstrucción del camino es idéntica a la de DFS/BFS, 
+            # usando el diccionario 'padres'.
             camino = []
             e = estado_actual
             while e:
@@ -142,19 +174,26 @@ def costo_uniforme(estado_inicial, estado_objetivo):
                 e = padres[tuple(e)]
             return camino[::-1]
 
+        # 4. Expansión del Nodo (Generación de Vecinos)
         for movimiento in posibles_movimientos(estado_actual):
             vecino = aplicar_movimiento(estado_actual, movimiento)
             tupla_vecino = tuple(vecino)
             
-            g_tentativo = g_actual + 1 # Cada movimiento cuesta 1
+            # Calculamos el costo para llegar a este nuevo estado:
+            # Costo actual + 1 (ya que cada movimiento en el 8-Puzzle cuesta 1).
+            g_tentativo = g_actual + 1 
 
-            # Si encontramos un camino más corto a este estado
+            # 5. Evaluación y Actualización
+            # Si el vecino no ha sido visitado O si encontramos un camino más barato para llegar a él:
             if tupla_vecino not in g_score or g_tentativo < g_score[tupla_vecino]:
                 
+                # ¡Este es el camino más corto conocido hasta ahora! Actualizamos el registro de costos.
                 g_score[tupla_vecino] = g_tentativo
+                
+                # Actualizamos el rastro de padres para este camino más corto.
                 padres[tupla_vecino] = estado_actual
                 
-                # Añade a la cola de prioridad, solo usando g_tentativo como prioridad
+                # Añadimos el vecino a la cola de prioridad con su nuevo costo como prioridad.
                 heapq.heappush(cola_prioridad, (g_tentativo, vecino))
 
     return None
