@@ -121,32 +121,25 @@ def costo_uniforme(estado_inicial, estado_objetivo):
     """
     Búsqueda de Costo Uniforme (UCS). Idéntico a A* con h(n)=0.
     Garantiza la solución de menor costo (mínimo número de movimientos).
-    """
-    # 1. Inicialización de Estructuras Clave
+    """  
+    cola_prioridad = []                         # 'cola_prioridad' usará un min-heap (heapq) para siempre sacar el estado con menor costo
     
-    # 'cola_prioridad' usará un min-heap (heapq) para siempre sacar el estado con menor costo.
-    cola_prioridad = []
+    g_score = {tuple(estado_inicial): 0}        # 'g_score' guarda el costo (g_n) actual más bajo conocido desde el inicio a cada estado
     
-    # 'g_score' guarda el costo (g_n) actual más bajo conocido desde el inicio a cada estado.
-    g_score = {tuple(estado_inicial): 0}
+    padres = {tuple(estado_inicial): None}      # Es igual para reconstruir el camino
     
-    # 'padres' sigue siendo esencial para reconstruir el camino.
-    padres = {tuple(estado_inicial): None}
-    
-    # Añadimos el estado inicial a la cola con su prioridad (costo = 0).
-    # Formato: (costo, estado)
+    # Añadimos el estado inicial a la cola con su prioridad (costo = 0), (costo, estado)
     heapq.heappush(cola_prioridad, (0, estado_inicial))
 
-    # 2. Ciclo Principal de Exploración
+    # Exploración
     while cola_prioridad:
-        # Extraemos el estado con la menor prioridad (el menor costo g_actual).
+        # Extraemos el estado con la menor prioridad (el menor costo g_actual)
         g_actual, estado_actual = heapq.heappop(cola_prioridad)
         tupla_actual = tuple(estado_actual)
 
-        # 3. Verificación de la Solución
+        # Vemos si es la solución
         if estado_actual == estado_objetivo:
-            # La reconstrucción del camino es idéntica a la de DFS/BFS, 
-            # usando el diccionario 'padres'.
+            # La reconstrucción del camino es idéntica a la de DFS o BFS
             camino = []
             e = estado_actual
             while e:
@@ -154,26 +147,22 @@ def costo_uniforme(estado_inicial, estado_objetivo):
                 e = padres[tuple(e)]
             return camino[::-1]
 
-        # 4. Expansión del Nodo (Generación de Vecinos)
+        # Vemos o generamos los vecinos
         for movimiento in posibles_movimientos(estado_actual):
             vecino = aplicar_movimiento(estado_actual, movimiento)
             tupla_vecino = tuple(vecino)
             
-            # Calculamos el costo para llegar a este nuevo estado:
-            # Costo actual + 1 (ya que cada movimiento en el 8-Puzzle cuesta 1).
+            # Calculamos el costo para llegar a este nuevo estado: costo actual + 1 (cada paso cuesta 11)
             g_tentativo = g_actual + 1 
 
-            # 5. Evaluación y Actualización
-            # Si el vecino no ha sido visitado O si encontramos un camino más barato para llegar a él:
+            # Si el vecino no ha sido visitado O si encontramos un camino más barato para llegar a él
             if tupla_vecino not in g_score or g_tentativo < g_score[tupla_vecino]:
                 
-                # ¡Este es el camino más corto conocido hasta ahora! Actualizamos el registro de costos.
-                g_score[tupla_vecino] = g_tentativo
+                g_score[tupla_vecino] = g_tentativo         #Actualizamos el registro de costos ya que este es el camino más corto
                 
-                # Actualizamos el rastro de padres para este camino más corto.
-                padres[tupla_vecino] = estado_actual
+                padres[tupla_vecino] = estado_actual        # Actualizamos el rastro de padres para este camino más corto.
                 
-                # Añadimos el vecino a la cola de prioridad con su nuevo costo como prioridad.
+                # Añadimos el vecino a la cola de prioridad con su nuevo costo como prioridad
                 heapq.heappush(cola_prioridad, (g_tentativo, vecino))
 
     return None
