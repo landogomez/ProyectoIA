@@ -43,12 +43,6 @@ def aplicar_movimiento(estado, movimiento):
 
     return nuevo_estado
 
-
-#TODO FUNCIONES HEURÍSTICAS (A*)
-def distancia_manhattan(estado, estado_objetivo):
-    print("HAY QUE IMPLEMENTARLO :D")
-
-
 # BFS (Búsqueda en Anchura)
 def bfs(estado_inicial, estado_objetivo):
     queve = deque()
@@ -159,10 +153,82 @@ def costo_uniforme(estado_inicial, estado_objetivo):
 
     return None
 
+#---------------------------------------------------------------------------------
+#//////////////////////////A* con Heuristica Manhattan////////////////////////////
+#---------------------------------------------------------------------------------
 
-#TODO A* (A-Star)
 def a_star(estado_inicial, estado_objetivo):
-    print("HAY QUE IMPLEMENTARLO :D")
+    
+    cola_prioridad = []
+    
+    g_score = {tuple(estado_inicial): 0}
+    
+    h_inicial = distancia_manhattan(estado_inicial, estado_objetivo)
+    f_score = {tuple(estado_inicial): h_inicial}
+    
+    padres = {tuple(estado_inicial): None}
+    
+    conjunto_cerrado = set()
+    
+    heapq.heappush(cola_prioridad, (h_inicial, estado_inicial))
+
+    while cola_prioridad:
+        f_actual, estado_actual = heapq.heappop(cola_prioridad)
+        tupla_actual = tuple(estado_actual)
+        
+        if tupla_actual in conjunto_cerrado:
+            continue
+
+        conjunto_cerrado.add(tupla_actual)
+
+        if estado_actual == estado_objetivo:
+            camino = []
+            e = estado_actual
+            while e:
+                camino.append(e)
+                e = padres[tuple(e)]
+            return camino[::-1]
+
+        for movimiento in posibles_movimientos(estado_actual):
+            vecino = aplicar_movimiento(estado_actual, movimiento)
+            tupla_vecino = tuple(vecino)
+            
+            if tupla_vecino in conjunto_cerrado:
+                continue
+            
+            g_tentativo = g_score[tupla_actual] + 1 
+            
+            if tupla_vecino not in g_score or g_tentativo < g_score[tupla_vecino]:
+                
+                g_score[tupla_vecino] = g_tentativo
+                h_vecino = distancia_manhattan(vecino, estado_objetivo)
+                f_score[tupla_vecino] = g_tentativo + h_vecino
+                
+                
+                padres[tupla_vecino] = estado_actual
+                
+                heapq.heappush(cola_prioridad, (f_score[tupla_vecino], vecino))
+
+    return None 
+
+def distancia_manhattan(estado, estado_objetivo):
+    
+    distancia = 0
+    
+    for i in range(9):
+        if estado[i] != 0:  
+            fila_actual, col_actual = divmod(i, 3)
+            
+            valor = estado[i]
+            posicion_objetivo = estado_objetivo.index(valor)
+            fila_objetivo, col_objetivo = divmod(posicion_objetivo, 3)
+            
+            distancia += abs(fila_actual - fila_objetivo) + abs(col_actual - col_objetivo)
+    
+    return distancia
+
+#---------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------
 
 def main():
     estado_objetivo = [1, 2, 3, 4, 5, 6, 7, 8, 0]  
