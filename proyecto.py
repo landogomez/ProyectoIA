@@ -87,54 +87,40 @@ def dfs(estado_inicial, estado_objetivo):
     No garantiza el camino más corto.
     """
     pila = [estado_inicial] 
+    visitados = {tuple(estado_inicial)}             # Usamos tuplas porque las listas (estados) no pueden ser claves en conjuntos
     
-    # Usamos tuplas porque las listas (estados) no pueden ser claves en conjuntos.
-    visitados = {tuple(estado_inicial)} 
-    
-    # 'padres' almacena el rastro: qué estado llevó a cuál. Es clave para reconstruir el camino.
-    # El estado inicial no tiene padre (es None).
+    # Es clave para reconstruir el camino ya que almacena el rastro, el camino que lo llevó ahi
+    # El estado inicial no tiene padre (es None)
     padres = {tuple(estado_inicial): None}
 
     while pila:
-        # Extraemos el último estado añadido (LIFO). Esto define la "Profundidad"
-        estado_actual = pila.pop() 
+        estado_actual = pila.pop()                  # Extraemos el último estado añadido (LIFO). Esto define la "Profundidad"
         
-        if estado_actual == estado_objetivo:         #Vemos si está bien o si es la respuesta
-            # Si encontramos el objetivo, iniciamos el rastreo inverso (backtracking).
-            camino = []
-            e = estado_actual # Empezamos el rastreo desde el objetivo.
+        if estado_actual == estado_objetivo:        #Vemos si está bien o si es la respuesta
+            camino = []                             # iniciamos el backtracking
+            e = estado_actual                       # Empezamos el rastreo desde el objetivo
             
-            while e: # El bucle se detiene cuando 'e' llega al estado inicial, cuyo padre es None.
-                camino.append(e) # Añadimos el estado al camino (en orden inverso).
-                # Buscamos el estado predecesor (padre) usando la tupla como clave.
-                e = padres[tuple(e)] 
-            
-            # Devolvemos el camino, invirtiéndolo para que vaya de Inicio a Objetivo.
+            while e:                                # El bucle se detiene cuando 'e' llega al estado inicial, cuyo padre es None
+                camino.append(e)                    # Añadimos el estado al camino (en orden inverso)
+                e = padres[tuple(e)]                # Buscamos el estado predecesor (padre) usando la tupla como clave
+ 
             return camino[::-1]
         
-        # 4. Expansión del Nodo (Generación de Vecinos)
-        
-        # Iteramos sobre los movimientos posibles (Arriba, Abajo, Izq, Der).
-        # Usamos 'reversed' para que el primer vecino generado sea el último en salir de la pila,
-        # asegurando que se explore esa rama primero y así logrando la Profundidad.
+        # Iteramos sobre los movimientos posibles (Arriba, Abajo, Izq, Der)
+        # Usamos 'reversed' para que el primer vecino sea el último en salir, asi se explora esa rama primero y logramos rofundidad
         for movimiento in reversed(posibles_movimientos(estado_actual)): 
             
-            # Aplicamos el movimiento para obtener el nuevo tablero.
-            vecino = aplicar_movimiento(estado_actual, movimiento)
+            vecino = aplicar_movimiento(estado_actual, movimiento)          # Aplicamos el movimiento para obtener el nuevo tablero
             tupla_vecino = tuple(vecino)
 
-            # 5. Filtrado y Registro del Nuevo Estado
+            # Filtrado y Registro del Nuevo Estado
             if tupla_vecino not in visitados:
-                # Si el vecino es nuevo, lo registramos para no visitarlo dos veces.
-                visitados.add(tupla_vecino)
+                visitados.add(tupla_vecino)             # Si el vecino es nuevo, lo registramos para no visitarlo dos veces
+                padres[tupla_vecino] = estado_actual    # Establecemos el estado actual como el "padre" del nuevo estado
                 
-                # Establecemos el estado actual como el "padre" del nuevo estado.
-                padres[tupla_vecino] = estado_actual
-                
-                # Añadimos el nuevo estado a la pila para explorarlo pronto.
                 pila.append(vecino)
 
-    return None # Si la pila se vacía y no encontramos la meta, no hay solución.
+    return None         # Si la pila se vacía entonces no hay solución
 
 # Costo Uniforme (UCS)
 def costo_uniforme(estado_inicial, estado_objetivo):
