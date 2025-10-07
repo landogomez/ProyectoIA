@@ -46,7 +46,7 @@ def aplicar_movimiento(estado, movimiento):
 
 #TODO FUNCIONES HEURÍSTICAS (A*)
 def distancia_manhattan(estado, estado_objetivo):
-    print("HAY QUE IMPLEMENTARLO GEI :D")
+    print("HAY QUE IMPLEMENTARLO :D")
 
 
 # BFS (Búsqueda en Anchura)
@@ -162,7 +162,7 @@ def costo_uniforme(estado_inicial, estado_objetivo):
 
 #TODO A* (A-Star)
 def a_star(estado_inicial, estado_objetivo):
-    print("HAY QUE IMPLEMENTARLO GEI :D")
+    print("HAY QUE IMPLEMENTARLO :D")
 
 def main():
     estado_objetivo = [1, 2, 3, 4, 5, 6, 7, 8, 0]  
@@ -170,16 +170,16 @@ def main():
 
     estado_inicial = estado_complejo 
     
-    print("--- 8-Puzzle Solucionador ---")
+    print("\n--- 8-Puzzle Solucionador ---")
     print("Estado Inicial:")
     imprimir_tablero(estado_inicial)
     
-    print("\nSelecciona el algoritmo a utilizar:")
+    print("\nSelecciona el algoritmo a utilizar")
     print("1: BFS (Búsqueda en Anchura)")
     print("2: DFS (Búsqueda en Profundidad)")
     print("3: Costo Uniforme (UCS)")
     print("4: A* (A-Star)")
-    opcion = input("Introduce el número de la opción (1-4): ")
+    opcion = input("\nIntroduce el número de la opción (1-4): ")
 
     solver = None
     algoritmo_nombre = ""
