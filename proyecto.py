@@ -21,6 +21,7 @@ def posibles_movimientos(estado):
     fila, col = divmod(hueco, 3)    #Se sacan las filas y columnas, el indice, para más adelante ver hacia donde se puede mover
     movimientos = []
 
+    # Mas adelante aqui xd
     if fila > 0:  # Arriba
         movimientos.append(-3)
     if fila < 2:  # Abajo
@@ -81,7 +82,7 @@ def dfs(estado_inicial, estado_objetivo):
     No garantiza el camino más corto.
     """
     pila = [estado_inicial] 
-    visitados = {tuple(estado_inicial)}             # Usamos tuplas porque las listas (estados) no pueden ser claves en conjuntos
+    visitados = {tuple(estado_inicial)}             # Asi no repetimos estados
     
     # Es clave para reconstruir el camino ya que almacena el rastro, el camino que lo llevó ahi
     # El estado inicial no tiene padre (es None)
@@ -116,56 +117,6 @@ def dfs(estado_inicial, estado_objetivo):
 
     return None         # Si la pila se vacía entonces no hay solución
 
-# Costo Uniforme (UCS)
-def costo_uniforme(estado_inicial, estado_objetivo):
-    """
-    Búsqueda de Costo Uniforme (UCS). Idéntico a A* con h(n)=0.
-    Garantiza la solución de menor costo (mínimo número de movimientos).
-    """  
-    cola_prioridad = []                         # 'cola_prioridad' usará un min-heap (heapq) para siempre sacar el estado con menor costo
-    
-    g_score = {tuple(estado_inicial): 0}        # 'g_score' guarda el costo (g_n) actual más bajo conocido desde el inicio a cada estado
-    
-    padres = {tuple(estado_inicial): None}      # Es igual para reconstruir el camino
-    
-    # Añadimos el estado inicial a la cola con su prioridad (costo = 0), (costo, estado)
-    heapq.heappush(cola_prioridad, (0, estado_inicial))
-
-    # Exploración
-    while cola_prioridad:
-        # Extraemos el estado con la menor prioridad (el menor costo g_actual)
-        g_actual, estado_actual = heapq.heappop(cola_prioridad)
-        tupla_actual = tuple(estado_actual)
-
-        # Vemos si es la solución
-        if estado_actual == estado_objetivo:
-            # La reconstrucción del camino es idéntica a la de DFS o BFS
-            camino = []
-            e = estado_actual
-            while e:
-                camino.append(e)
-                e = padres[tuple(e)]
-            return camino[::-1]
-
-        # Vemos o generamos los vecinos
-        for movimiento in posibles_movimientos(estado_actual):
-            vecino = aplicar_movimiento(estado_actual, movimiento)
-            tupla_vecino = tuple(vecino)
-            
-            # Calculamos el costo para llegar a este nuevo estado: costo actual + 1 (cada paso cuesta 11)
-            g_tentativo = g_actual + 1 
-
-            # Si el vecino no ha sido visitado O si encontramos un camino más barato para llegar a él
-            if tupla_vecino not in g_score or g_tentativo < g_score[tupla_vecino]:
-                
-                g_score[tupla_vecino] = g_tentativo         #Actualizamos el registro de costos ya que este es el camino más corto
-                
-                padres[tupla_vecino] = estado_actual        # Actualizamos el rastro de padres para este camino más corto.
-                
-                # Añadimos el vecino a la cola de prioridad con su nuevo costo como prioridad
-                heapq.heappush(cola_prioridad, (g_tentativo, vecino))
-
-    return None
 
 #---------------------------------------------------------------------------------
 #//////////////////////////A* con Heuristica Manhattan////////////////////////////
@@ -246,9 +197,7 @@ def distancia_manhattan(estado, estado_objetivo):
 
 def main():
     estado_objetivo = [1, 2, 3, 4, 5, 6, 7, 8, 0]  
-    estado_complejo = [8, 6, 7, 2, 5, 4, 3, 0, 1] 
-
-    estado_inicial = estado_complejo 
+    estado_inicial = [8, 6, 7, 2, 5, 4, 3, 0, 1] 
     
     print("\n--- 8-Puzzle Solucionador ---")
     print("Estado Inicial:")
