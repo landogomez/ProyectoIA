@@ -206,8 +206,7 @@ def main():
     print("\nSelecciona el algoritmo a utilizar")
     print("1: BFS (Búsqueda en Anchura)")
     print("2: DFS (Búsqueda en Profundidad)")
-    print("3: Costo Uniforme (UCS)")
-    print("4: A* (A-Star)")
+    print("3: A* (A-Star)")
     opcion = input("\nIntroduce el número de la opción (1-4): ")
 
     solver = None
@@ -219,9 +218,6 @@ def main():
     elif opcion == '2':
         solver = dfs
         algoritmo_nombre = "DFS"
-    elif opcion == '3':
-        solver = costo_uniforme
-        algoritmo_nombre = "Costo Uniforme (UCS)"
     elif opcion == '4':
         solver = a_star
         algoritmo_nombre = "A*"
