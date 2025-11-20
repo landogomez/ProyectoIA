@@ -201,6 +201,35 @@ class Mundo:
         if not (celda.brisa or celda.hedor or celda.oro):
             print("La celda parece segura.")
 
+
+    def actualizar_kb_con_percepciones(self, kb):
+        i, j = self.pos_agente
+        celda = self.celdas[i][j]
+        
+        # Siempre sabemos que la casilla donde está el agente es segura
+        kb.agregar_hecho(f"Seguro_{i}_{j}")
+        
+        if celda.brisa:
+            kb.agregar_hecho(f"Brisa_{i}_{j}")
+        if celda.hedor:
+            kb.agregar_hecho(f"Hedor_{i}_{j}")
+        if celda.brillo:
+            kb.agregar_hecho(f"Brillo_{i}_{j}")
+
+    def decidir_movimiento(self, kb):
+        i, j = self.pos_agente
+
+        # Buscar seguras sin visitar
+        for x, y in kb.seguras:
+            if not self.celdas[x][y].visitada:
+                # Movimiento prioritario
+                if abs(i-x) + abs(j-y) == 1:  # Debe ser adyacente
+                    return (x,y)
+
+        return None  # No hay movimiento seguro conocido
+
+
+
     def mover_agente(self, direccion, kb):
         i, j = self.pos_agente
         if direccion == "arriba":
@@ -222,28 +251,141 @@ class Mundo:
             print("No puedes salir del mapa")
 
 class KB:
-    def __init__(self):
-        self.reglas = []
-        self.hechos = set()
-        self.conclusiones = set()
+    def __init__(self, tamaño):
+        self.tamaño = tamaño
+        self.hechos = {}  # Ej: {'B_1_1': True}
+        self.posibles_pozos = set()
+        self.posibles_wumpus = set()
+        self.seguras = set()
+        self.confirmados_pozos = set()
+        self.confirmado_wumpus = None  # Solo hay 1 wumpus
 
-    def agregar_hecho(self, proposicion):
-        self.hechos.add(proposicion)
-        print(f"Hecho agregado: {proposicion}")
+    def agregar_hecho(self, proposicion, valor=True):
+        self.hechos[proposicion] = valor
+        print(f"Hecho agregado: {proposicion} = {valor}")
 
-    def agregar_regla(self, regla):
-        self.reglas.append(regla)
-        print(f"Regla agregada: {regla}")
+    def obtener_adyacentes(self, i, j):
+        directions = [(i-1,j),(i+1,j),(i,j-1),(i,j+1)]
+        return [(x,y) for x,y in directions if 0 <= x < self.tamaño and 0 <= y < self.tamaño]
+
+    def actualizar_conocimientos(self, i, j, brisa, hedor):
+        """
+        Se llama cuando el agente entra a una celda (i,j)
+        y observa si hay brisa/hedor
+        """
+        self.seguras.add((i, j))
+        ady = self.obtener_adyacentes(i, j)
+
+        # Si NO hay brisa → adyacentes libres de pozos
+        if not brisa:
+            for c in ady:
+                self.posibles_pozos.discard(c)
+                self.seguras.add(c)
+
+        # Si hay brisa → adyacentes posibles pozos (si no son seguras)
+        else:
+            for c in ady:
+                if c not in self.seguras:
+                    self.posibles_pozos.add(c)
+
+        # Si NO hay hedor → adyacentes libres de Wumpus
+        if not hedor:
+            for c in ady:
+                if c in self.posibles_wumpus:
+                    self.posibles_wumpus.remove(c)
+
+
+        # Si hay hedor → adyacentes posibles Wumpus (si no son seguras)
+        else:
+            for c in ady:
+                if c not in self.seguras:
+                    self.posibles_wumpus.add(c)
+
+        # Confirmar Wumpus si queda solo un candidato
+        if len(self.posibles_wumpus) == 1 and self.confirmado_wumpus is None:
+            self.confirmado_wumpus = list(self.posibles_wumpus)[0]
+            print(f" ¡Wumpus confirmado en {self.confirmado_wumpus}!")
+
+        self.mostrar_estado()
+
 
     def mostrar_estado(self):
         print("\n--- KB ---")
-        print("Hechos observados:", self.hechos)
-        print("Reglas del dominio:", self.reglas)
-        print("Conclusiones inferidas:", self.conclusiones)
-        print("-----------\n")
+        print("Seguras:", self.seguras)
+        print("Posibles Pozos:", self.posibles_pozos)
+        print("Posibles Wumpus:", self.posibles_wumpus)
+        print("Wumpus Confirmado:", self.confirmado_wumpus)
+        print("--------------\n")
+
+
+class Agente:
+    def __init__(self, mundo, kb):
+        self.mundo = mundo
+        self.kb = kb
+        self.pos = (0, 0)
+        self.vivo = True
+        self.tiene_oro = False
+        self.visitadas = set()
+
+    def obtener_percepciones(self):
+        i, j = self.pos
+        celda = self.mundo.celdas[i][j]
+        brisa = celda.brisa
+        hedor = celda.hedor
+        brillo = celda.brillo
+        print(f"En {self.pos} → Brisa={brisa}, Hedor={hedor}, Brillo={brillo}")
+        self.kb.actualizar_conocimientos(i, j, brisa, hedor)
+        return brillo
+
+    def elegir_movimiento(self):
+        for casilla in self.kb.seguras:
+            if casilla not in self.visitadas:
+                i,j = self.pos
+                x,y = casilla
+                if abs(i-x) + abs(j-y) == 1:
+                    return casilla
+        return None
+
+    def moverse(self, destino):
+        self.visitadas.add(self.pos)
+        self.pos = destino
+        print(f"Movimiento a {self.pos}")
+        self.mundo.pos_agente = self.pos
+        celda = self.mundo.celdas[self.pos[0]][self.pos[1]]
+        
+        if celda.pozo or celda.wumpus:
+            self.vivo = False
+            print("Moriste...")
+        if celda.oro:
+            self.tiene_oro = True
+            print("¡Encontraste el oro!")
 
 
 
 # --- Ejecución de prueba ---
-m = Mundo()
-m.mostrar_tablero()
+m = Mundo(tamaño=4)
+kb = KB(tamaño=4)
+agente = Agente(m, kb)
+
+# Inicializar conocimiento de la casilla (0,0)
+agente.obtener_percepciones()
+
+while agente.vivo and not agente.tiene_oro:
+    m.mostrar_tablero()
+    destino = agente.elegir_movimiento()
+    
+    if not destino:
+        print("No hay más movimientos seguros.")
+        break
+    
+    agente.moverse(destino)
+    if not agente.vivo:
+        break
+    if agente.obtener_percepciones():
+        agente.tiene_oro = True
+        print("Oro detectado al entrar ✨")
+        break
+
+print("\nResultado final:")
+print(f"Vivo: {agente.vivo}, Oro: {agente.tiene_oro}")
+
