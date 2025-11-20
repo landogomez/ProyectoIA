@@ -259,6 +259,7 @@ class KB:
         self.seguras = set()
         self.confirmados_pozos = set()
         self.confirmado_wumpus = None  # Solo hay 1 wumpus
+        self.percepciones = {}
 
     def agregar_hecho(self, proposicion, valor=True):
         self.hechos[proposicion] = valor
@@ -267,46 +268,88 @@ class KB:
     def obtener_adyacentes(self, i, j):
         directions = [(i-1,j),(i+1,j),(i,j-1),(i,j+1)]
         return [(x,y) for x,y in directions if 0 <= x < self.tamaño and 0 <= y < self.tamaño]
+    
+    def inferir(self):
+        # Regla 1: Si una casilla fue marcada segura → no puede estar en sospechosos
+        for c in list(self.posibles_wumpus):
+            if c in self.seguras:
+                self.posibles_wumpus.remove(c)
+
+        for c in list(self.posibles_pozos):
+            if c in self.seguras:
+                self.posibles_pozos.remove(c)
+
+        # Regla 2: Casillas descartadas si contradicen percepciones sin hedor/brisa
+        for i in range(self.tamaño):
+            for j in range(self.tamaño):
+                if (i,j) in self.seguras:
+                    continue
+                
+                ady = self.obtener_adyacentes(i,j)
+                # Si una casilla adyacente NO tenía hedor, aquí NO puede haber Wumpus
+                for ax, ay in ady:
+                    if not self.percepciones[(ax,ay)]["hedor"]:
+                        self.posibles_wumpus.discard((i,j))
+                    # Si una casilla adyacente NO tenía brisa, aquí NO puede haber pozo
+                    if not self.percepciones[(ax,ay)]["brisa"]:
+                        self.posibles_pozos.discard((i,j))
+
+        # Regla 3: Si solo queda 1 sospechoso → confirmar
+        if len(self.posibles_wumpus) == 1 and self.confirmado_wumpus is None:
+            self.confirmado_wumpus = list(self.posibles_wumpus)[0]
+            print(f"¡Wumpus confirmado en {self.confirmado_wumpus}!")
+
 
     def actualizar_conocimientos(self, i, j, brisa, hedor):
-        """
-        Se llama cuando el agente entra a una celda (i,j)
-        y observa si hay brisa/hedor
-        """
+        # Guardar percepción
+        self.percepciones[(i, j)] = {"brisa": brisa, "hedor": hedor}
         self.seguras.add((i, j))
+
         ady = self.obtener_adyacentes(i, j)
 
-        # Si NO hay brisa → adyacentes libres de pozos
-        if not brisa:
-            for c in ady:
-                self.posibles_pozos.discard(c)
-                self.seguras.add(c)
-
-        # Si hay brisa → adyacentes posibles pozos (si no son seguras)
-        else:
+        # --- Reglas para pozos ---
+        if brisa:
+            # Adyacentes son sospechosos
             for c in ady:
                 if c not in self.seguras:
                     self.posibles_pozos.add(c)
-
-        # Si NO hay hedor → adyacentes libres de Wumpus
-        if not hedor:
-            for c in ady:
-                if c in self.posibles_wumpus:
-                    self.posibles_wumpus.remove(c)
-
-
-        # Si hay hedor → adyacentes posibles Wumpus (si no son seguras)
         else:
+            # Si NO hay brisa → adyacentes libres de pozo
+            for c in ady:
+                if c in self.posibles_pozos:
+                    self.posibles_pozos.remove(c)
+                self.seguras.add(c)
+
+        # Deducción fuerte (pozos)
+        for pos in ady:
+            # Si hay brisa y solo un sospechoso → confirmar pozo
+            sospechosos_pozos = [c for c in ady if c in self.posibles_pozos]
+            if brisa and len(sospechosos_pozos) == 1:
+                pozo = sospechosos_pozos[0]
+                self.confirmados_pozos.add(pozo)
+                self.posibles_pozos.clear()  # Ya está confirmado
+                print(f"¡Pozo confirmado en {pozo}!")
+
+        # --- Reglas para Wumpus ---
+        if hedor:
             for c in ady:
                 if c not in self.seguras:
                     self.posibles_wumpus.add(c)
+        else:
+            for c in ady:
+                if c in self.posibles_wumpus:
+                    self.posibles_wumpus.remove(c)
+                self.seguras.add(c)
 
-        # Confirmar Wumpus si queda solo un candidato
-        if len(self.posibles_wumpus) == 1 and self.confirmado_wumpus is None:
-            self.confirmado_wumpus = list(self.posibles_wumpus)[0]
-            print(f" ¡Wumpus confirmado en {self.confirmado_wumpus}!")
+        # Deducción fuerte (wumpus)
+        sospechosos_wumpus = [c for c in self.posibles_wumpus if c in ady]
+        if hedor and len(sospechosos_wumpus) == 1 and self.confirmado_wumpus is None:
+            self.confirmado_wumpus = sospechosos_wumpus[0]
+            print(f"¡Wumpus confirmado en {self.confirmado_wumpus}!")
 
         self.mostrar_estado()
+
+
 
 
     def mostrar_estado(self):
