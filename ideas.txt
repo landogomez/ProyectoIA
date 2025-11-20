@@ -1,0 +1,5 @@
+*Notas*
+1.- Falta implementar el DFS, el A*, una heuristica y lo del costo uniforme
+2.- Voy a hacer un menú para seleccionar bien que algoritmo elegir
+3.- Descarguen la extensión de VSC que se llama BETTER COMMENTS
+4.- ¿Debo colocar cada paso que se haga o solo mostrar el número de pasos finales?
