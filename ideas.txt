@@ -3,3 +3,7 @@
 2.- Voy a hacer un menú para seleccionar bien que algoritmo elegir
 3.- Descarguen la extensión de VSC que se llama BETTER COMMENTS
 4.- ¿Debo colocar cada paso que se haga o solo mostrar el número de pasos finales?
+
+from collections import deque
+import heapq 
+>>>>>>> e087ade80cd33f2bea433ef969918efdaa803d48
