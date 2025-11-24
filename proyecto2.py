@@ -1,8 +1,6 @@
 from collections import deque
 import random
 
-
-
 class Celda:
     def __init__(self):
         self.pozo = False
@@ -13,7 +11,7 @@ class Celda:
         self.brillo = False
 
 class Mundo:
-    def __init__(self, tamaño=4, prob_pozo=0.2):
+    def __init__(self, tamaño=4, prob_pozo=0.2):    
         self.tamaño = tamaño
         self.prob_pozo = prob_pozo
         self.celdas = [[Celda() for _ in range(tamaño)] for _ in range(tamaño)]
@@ -35,8 +33,6 @@ class Mundo:
         if celda.pozo or celda.wumpus or celda.oro:
             return False
         return True
-
-
 
     def generar_pozos(self):
         for i in range(self.tamaño):
@@ -136,8 +132,6 @@ class Mundo:
                 self.celdas[o_i][o_j].oro = False
                 self.celdas[o_i][o_j].brillo = False
 
-
-    
 
     def validar_mundo(self):
         # Asegurarse de que la celda inicial no tenga pozo, wumpus, ni oro
@@ -259,7 +253,7 @@ class KB:
         self.seguras = set()
         self.confirmados_pozos = set()
         self.confirmado_wumpus = None  # Solo hay 1 wumpus
-        self.percepciones = {}
+        self.percepciones = {}  # Memorias de lo que sintió en cada casilla visitada
 
     def agregar_hecho(self, proposicion, valor=True):
         self.hechos[proposicion] = valor
