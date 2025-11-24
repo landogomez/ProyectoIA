@@ -425,4 +425,3 @@ while agente.vivo and not agente.tiene_oro:
 
 print("\nResultado final:")
 print(f"Vivo: {agente.vivo}, Oro: {agente.tiene_oro}")
-
